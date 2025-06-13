@@ -18,6 +18,7 @@
     {
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
+	    libsvm
           (python312.withPackages (ps: with ps; [
             ipython
             ipykernel
@@ -28,7 +29,8 @@
             seaborn
             scikit-learn
             torch
-	    propka
+            biopython
+            propka
           ]))
           gcc13
         ];
