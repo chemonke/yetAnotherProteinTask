@@ -18,7 +18,8 @@
     {
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
-	    libsvm
+          libsvm
+          aria2
           (python312.withPackages (ps: with ps; [
             ipython
             ipykernel
@@ -31,27 +32,51 @@
             torch
             biopython
             propka
+	    absl-py
+	    docker
           ]))
           gcc13
         ];
         shellHook = ''
-          # Use GCC 13 so nvcc picks a compatible compiler
           export CC=${pkgs.gcc13}/bin/gcc
           export CXX=${pkgs.gcc13}/bin/g++
 
-          # If you build custom CUDA code, make sure CUDA_PATH is set
           export CUDA_PATH=${pkgs.cudatoolkit}
-
-          # Extend dynamic linker path for OpenGL & CUDA (needed only when
-          # compiling your own kernels)
           export LD_LIBRARY_PATH=${
             pkgs.lib.makeLibraryPath [
-              "/run/opengl-driver"   # libGL.so from the running driver
+              "/run/opengl-driver"
               pkgs.cudatoolkit
               pkgs.cudaPackages.cudnn
             ]
           }:$LD_LIBRARY_PATH
         '';
+      };
+
+      # Add nixosConfigurations for system-level config
+      nixosConfigurations.${system} = nixpkgs.lib.nixosSystem {
+        system = "${system}";
+        modules = [
+          ({ config, pkgs, ... }: {
+            # Enable NVIDIA driver
+            hardware.nvidia.enable = true;
+
+            # Enable NVIDIA container toolkit
+            hardware.nvidia-container-toolkit.enable = true;
+
+            # Docker with NVIDIA runtime enabled
+            virtualisation.docker.enable = true;
+            virtualisation.docker.enableNvidia = true;
+
+            # Add system packages so nvidia-container-cli is globally available
+            environment.systemPackages = with pkgs; [
+              nvidia-container-toolkit
+              nvidia-docker
+            ];
+
+            # Allow unfree for NVIDIA drivers
+            nixpkgs.config.allowUnfree = true;
+          })
+        ];
       };
     };
 }
