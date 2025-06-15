@@ -34,6 +34,8 @@
             propka
 	    absl-py
 	    docker
+	    pdb2pqr
+	    gemmi
           ]))
           gcc13
         ];
