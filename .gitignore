@@ -1,5 +1,4 @@
 sbPCR/
 sbPCR_run/
 library/
-alphafold/
-alphafold_database/
+openfold/
